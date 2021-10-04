@@ -1,0 +1,346 @@
+kubeTargetVersionOverride: 1.16.3
+alertmanager:
+  alertmanagerSpec:
+{{- if .Values.monitoring | getOrNil "node" }}
+    nodeSelector:
+      kubernetes.io/hostname: {{ .Values.monitoring.node }}
+{{- end }}
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: {{ .Values.storageClass }}
+  externalUrl: https://prometheus.{{ .Values.ingress.domain }}
+  ingress:
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/hostname: alertmanager.{{ .Values.ingress.domain }}
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-stream-timeout: "1200"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    enabled: true
+    hosts:
+    - alertmanager.{{ .Values.ingress.domain }}
+    tls:
+    - hosts:
+      - alertmanager.{{ .Values.ingress.domain }}
+      secretName: alertmanager-tls
+  podSecurityPolicy:
+    enabled: false
+nodeExporter:
+  rbac:
+    pspEnabled: false
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    general: false
+global:
+  rbac:
+    pspEnabled: false
+grafana:
+  image:
+    repository: {{ .Values.docker_hub_mirror }}/grafana/grafana
+    tag: 7.5.2
+  dashboards:
+    default:
+      kube-official-dash:
+        gnetId: 2
+        revision: 1
+        datasource: Prometheus
+      node-exporter-full:
+        gnetId: 1860
+        revision: 15
+        datasource: Prometheus
+      im_k8s_cluster_portal:
+        json: |
+{{ readFile "dashboards/im_k8s_cluster_portal.json" | indent 10 }}
+      k8s-cluster-detail:
+        json: |
+{{ readFile "dashboards/k8s-cluster-detail.json" | indent 10 }}
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - disableDeletion: true
+        editable: false
+        folder: Generic
+        name: generic
+        options:
+          path: /tmp/dashboards/generic
+        orgId: 1
+        type: file
+      - disableDeletion: true
+        editable: true
+        folder: ''
+        options:
+          path: /var/lib/grafana/dashboards/default
+        orgId: 1
+        folder: ''
+        type: file
+
+  enabled: true
+  externalUrl: https://grafana.{{ .Values.ingress.domain }}
+  ingress:
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/hostname: grafana.{{ .Values.ingress.domain }}
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-stream-timeout: "1200"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    enabled: true
+    hosts:
+    - grafana.{{ .Values.ingress.domain }}
+    tls:
+    - hosts:
+      - grafana.{{ .Values.ingress.domain }}
+      secretName: grafana-tls
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClassName: {{ .Values.storageClass }}
+{{- if .Values.monitoring | getOrNil "node" }}
+    existingClaim: prometheus-operator-grafana
+{{- end }}
+  rbac:
+    pspEnabled: false
+  sidecar:
+    image:
+      repository: {{ .Values.docker_hub_mirror }}/grafana/grafana
+    dashboards:
+      SCProvider: False
+      annotations:
+        k8s-sidecar-target-directory: /tmp/dashboards/generic
+      defaultFolderName: Generic
+      searchNamespace: ALL
+  grafana.ini:
+    auth.anonymous:
+      enabled: true
+      org_name: Main Org.
+  initChownData:
+    image:
+      repository: {{ .Values.docker_hub_mirror }}/grafana/grafana
+kube-state-metrics:
+  podSecurityPolicy:
+    enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeApiServer:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+prometheusOperator:
+  admissionWebhooks:
+    patch:
+      image:
+        #repository: a8n-docker.repo.int.zone/jettech/kube-webhook-certgen
+        repository: {{ .Values.docker_hub_mirror }}/jettech/kube-webhook-certgen
+  configmapReloadImage:
+    repository: {{ .Values.docker_hub_mirror }}/jimmidyson/configmap-reload
+  tls:
+    tlsMinVersion: VersionTLS12
+prometheus:
+  ingress:
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/hostname: prometheus.{{ .Values.ingress.domain }}
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "1200"
+      nginx.ingress.kubernetes.io/proxy-stream-timeout: "1200"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    enabled: true
+    hosts:
+    - prometheus.{{ .Values.ingress.domain }}
+    tls:
+    - hosts:
+      - prometheus.{{ .Values.ingress.domain }}
+      secretName: prometheus-tls
+  podSecurityPolicy:
+    enabled: false
+  prometheusSpec:
+    # If this errors, try setting to 1
+    shards: null
+
+    {{- if .Values.monitoring | getOrNil "prometheus_fewer_metrics" }}
+    scrapeInterval: "5m"
+    {{- end }}
+{{- if .Values.monitoring | getOrNil "node" }}
+    nodeSelector:
+      kubernetes.io/hostname: {{ .Values.monitoring.node }}
+{{- end }}
+    additionalAlertRelabelConfigs:
+    - source_labels: [namespace]
+      regex: kube-system|infra|infrastructure|jenkins|^2.*|trunk|{{ .Values.monitoring.product_namespace }}
+      target_label: vital_namespace
+      replacement: "1"
+    additionalScrapeConfigs:
+    - job_name: kubernetes-pods
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - action: keep
+        regex: true
+        source_labels:
+        - __meta_kubernetes_pod_annotation_prometheus_io_scrape
+      - action: replace
+        regex: (.+)
+        source_labels:
+        - __meta_kubernetes_pod_annotation_prometheus_io_path
+        target_label: __metrics_path__
+      - action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        source_labels:
+        - __address__
+        - __meta_kubernetes_pod_annotation_prometheus_io_port
+        target_label: __address__
+      - action: replace
+        regex: (https?)
+        replacement: $1
+        source_labels:
+        - __meta_kubernetes_pod_annotation_prometheus_io_scheme
+        target_label: __scheme__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_namespace
+        target_label: kubernetes_namespace
+      - action: replace
+        source_labels:
+        - __meta_kubernetes_pod_name
+        target_label: kubernetes_pod_name
+      tls_config:
+        insecure_skip_verify: true
+    - job_name: 'kubernetes-service-endpoints'
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+        action: replace
+        target_label: __scheme__
+        regex: (https?)
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+        action: replace
+        target_label: __address__
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        action: replace
+        target_label: kubernetes_name
+      tls_config:
+        insecure_skip_verify: true
+    - job_name: check_pcp_login
+      metrics_path: /probe
+      params:
+        module:
+        - http_pcp_login
+      relabel_configs:
+      - action: replace
+        source_labels:
+        - __address__
+        target_label: __param_target
+      - action: replace
+        regex: http://([^.]+).([^.:]+)(.*)
+        replacement: $2
+        source_labels:
+        - __param_target
+        target_label: kubernetes_namespace
+      - action: replace
+        regex: http://([^.]+).([^.:]+):(\d+)/(.*)
+        replacement: $1.$2:$3
+        source_labels:
+        - __param_target
+        target_label: instance
+      - action: replace
+        replacement: prometheus-blackbox-exporter:9115
+        target_label: __address__
+      static_configs:
+      - targets:
+        - http://branding-ui-cluster-ui-local.test-mattymo:8080/servlet/Turbine/frm/single/action/PLoginHandler?event1234submit=doLogin&user=admin&password=d3335fe2-93f6-4612-b856-c1d6b59d26c2
+      relabel_configs:
+      - action: replace
+        source_labels:
+        - __address__
+        target_label: __param_target
+      - action: replace
+        regex: http://([^.]+).([^.:]+)(.*)
+        replacement: $2
+        source_labels:
+        - __param_target
+        target_label: kubernetes_namespace
+      - action: replace
+        regex: http://([^.]+).([^.:]+):(\d+)/(.*)
+        replacement: $1.$2:$3
+        source_labels:
+        - __param_target
+        target_label: instance
+      - action: replace
+        replacement: prometheus-blackbox-exporter:9115
+        target_label: __address__
+      static_configs:
+      - targets:
+        - http://oss-proxy.test-mattymo:8440/RPC2
+    - job_name: kubernetes-cadvisor
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      kubernetes_sd_configs:
+      - role: node
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - replacement: kubernetes.default.svc:443
+        target_label: __address__
+      - regex: (.+)
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+        source_labels:
+        - __meta_kubernetes_node_name
+        target_label: __metrics_path__
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+          storageClassName: {{ .Values.storageClass }}

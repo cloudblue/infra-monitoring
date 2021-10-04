@@ -1,0 +1,922 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "iteration": 1614954702087,
+  "links": [
+    {
+      "icon": "external link",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Prometheus",
+      "tooltip": "",
+      "type": "link",
+      "url": "/prometheus/"
+    },
+    {
+      "icon": "external link",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Kibana",
+      "tooltip": "Logs viewer",
+      "type": "link",
+      "url": "/kibana"
+    },
+    {
+      "icon": "external link",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Alertmanager",
+      "tooltip": "View current alerts",
+      "type": "link",
+      "url": "/alertmanager"
+    },
+    {
+      "icon": "external link",
+      "tags": [
+        "kubernetes"
+      ],
+      "targetBlank": true,
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "columns": [],
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fontSize": "90%",
+      "gridPos": {
+        "h": 9,
+        "w": 11,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "interval": "1d",
+      "pageSize": 10,
+      "repeat": null,
+      "repeatDirection": "h",
+      "showHeader": true,
+      "sort": {
+        "col": 12,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Pod Name",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "pod",
+          "thresholds": [
+            ""
+          ],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Status",
+          "align": "auto",
+          "colorMode": "row",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "link": false,
+          "mappingType": 1,
+          "pattern": "phase",
+          "preserveFormat": false,
+          "sanitize": false,
+          "thresholds": [
+            "OK",
+            "Pending",
+            "Error"
+          ],
+          "type": "string",
+          "unit": "none",
+          "valueMaps": [
+            {
+              "text": "OK",
+              "value": "Running"
+            },
+            {
+              "text": "Pending",
+              "value": "Pending"
+            },
+            {
+              "text": "Error",
+              "value": "CrashloopBackoff"
+            },
+            {
+              "text": "Error",
+              "value": "Error"
+            },
+            {
+              "text": "OK",
+              "value": "Succeeded"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "/(__name__|Time|app|chart|component|heritage|instance|job|kubernetes.*|release|Value)/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "kube_pod_status_phase{namespace=~\"$namespace\"} > 0",
+          "format": "table",
+          "instant": true,
+          "interval": "1d",
+          "intervalFactor": 1,
+          "legendFormat": "{{ pod }}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "All Pods Status",
+      "transform": "table",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": false,
+              "__name__": true,
+              "app_kubernetes_io_instance": true,
+              "app_kubernetes_io_managed_by": true,
+              "app_kubernetes_io_name": true,
+              "container": true,
+              "endpoint": true,
+              "helm_sh_chart": true,
+              "instance": true,
+              "job": true,
+              "kubernetes_name": true,
+              "kubernetes_namespace": true,
+              "phase": false,
+              "service": true
+            },
+            "indexByName": {
+              "Time": 3,
+              "Value": 16,
+              "__name__": 4,
+              "app_kubernetes_io_instance": 5,
+              "app_kubernetes_io_managed_by": 6,
+              "app_kubernetes_io_name": 7,
+              "container": 8,
+              "endpoint": 9,
+              "helm_sh_chart": 10,
+              "instance": 11,
+              "job": 12,
+              "kubernetes_name": 13,
+              "kubernetes_namespace": 14,
+              "namespace": 0,
+              "phase": 2,
+              "pod": 1,
+              "service": 15
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table-old"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "links": [],
+          "mappings": [
+            {
+              "from": "null",
+              "id": 1,
+              "operator": "",
+              "text": "0",
+              "to": "null",
+              "type": 2,
+              "value": ""
+            }
+          ],
+          "max": 10,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 11,
+        "y": 0
+      },
+      "id": 5,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Alertmanager",
+          "url": "/alertmanager"
+        }
+      ],
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "7.2.1",
+      "targets": [
+        {
+          "expr": "count(ALERTS{alertstate=\"firing\"})",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Firing Alerts",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {},
+          "mappings": [],
+          "max": 25,
+          "min": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 15,
+        "y": 0
+      },
+      "id": 7,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "7.2.1",
+      "targets": [
+        {
+          "expr": "count(kube_pod_labels{namespace=~\"$namespace\", label_jenkins=\"slave\"})",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{ pod }}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Currently running Jenkins builds",
+      "type": "gauge"
+    },
+    {
+      "columns": [],
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fontSize": "90%",
+      "gridPos": {
+        "h": 11,
+        "w": 11,
+        "x": 11,
+        "y": 4
+      },
+      "id": 3,
+      "interval": "1m",
+      "pageSize": 10,
+      "repeatDirection": "h",
+      "showHeader": true,
+      "sort": {
+        "col": 2,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Pod Name",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "pod",
+          "thresholds": [
+            ""
+          ],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Status",
+          "align": "auto",
+          "colorMode": "row",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "link": false,
+          "mappingType": 1,
+          "pattern": "phase",
+          "preserveFormat": false,
+          "sanitize": false,
+          "thresholds": [
+            "OK",
+            "Pending",
+            "Error"
+          ],
+          "type": "string",
+          "unit": "none",
+          "valueMaps": [
+            {
+              "text": "OK",
+              "value": "Running"
+            },
+            {
+              "text": "Pending",
+              "value": "Pending"
+            },
+            {
+              "text": "Error",
+              "value": "CrashloopBackoff"
+            },
+            {
+              "text": "Error",
+              "value": "Error"
+            },
+            {
+              "text": "OK",
+              "value": "Succeeded"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "/(__name__|Time|app|chart|component|heritage|instance|job|kubernetes.*|release|Value)/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "ALERTS",
+          "format": "table",
+          "instant": true,
+          "interval": "15m",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Recent Alerts",
+      "transform": "table",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "app_kubernetes_io_instance": true,
+              "app_kubernetes_io_managed_by": true,
+              "app_kubernetes_io_name": true,
+              "condition": true,
+              "container": true,
+              "deployment": true,
+              "endpoint": true,
+              "helm_sh_chart": true,
+              "instance": true,
+              "job": true,
+              "kubernetes_name": true,
+              "kubernetes_namespace": true,
+              "rule_group": true,
+              "service": true,
+              "statefulset": true
+            },
+            "indexByName": {
+              "Time": 5,
+              "Value": 23,
+              "__name__": 6,
+              "alertname": 0,
+              "alertstate": 1,
+              "app_kubernetes_io_instance": 7,
+              "app_kubernetes_io_managed_by": 8,
+              "app_kubernetes_io_name": 9,
+              "condition": 10,
+              "container": 11,
+              "deployment": 12,
+              "endpoint": 13,
+              "helm_sh_chart": 14,
+              "instance": 15,
+              "job": 16,
+              "job_name": 17,
+              "kubernetes_name": 18,
+              "kubernetes_namespace": 19,
+              "namespace": 3,
+              "pod": 4,
+              "rule_group": 20,
+              "service": 21,
+              "severity": 2,
+              "statefulset": 22
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table-old"
+    },
+    {
+      "columns": [],
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 11,
+        "x": 0,
+        "y": 9
+      },
+      "id": 9,
+      "pageSize": null,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Pod Name",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "pod",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Namespace",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "namespace",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Time",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "kube_pod_labels{namespace=~\"$namespace\", label_jenkins=\"slave\", job=\"kube-state-metrics\"}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Recent jenkins job pods",
+      "transform": "table",
+      "type": "table-old"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 3,
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 11,
+        "y": 15
+      },
+      "hiddenSeries": false,
+      "id": 11,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.2.1",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (phase)(kube_pod_status_phase{namespace=~\"$namespace\", job=\"kube-state-metrics\"})",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{phase}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Pods statuses",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:40",
+          "decimals": 0,
+          "format": "short",
+          "label": "Pod count",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:41",
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "isNone": true,
+          "selected": false,
+          "text": "None",
+          "value": ""
+        },
+        "datasource": "Prometheus",
+        "definition": "datasource",
+        "hide": 2,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "ds",
+        "options": [],
+        "query": "datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "/$ds/",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(node_boot_time_seconds{job=\"node-exporter\"}, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "node",
+        "options": [],
+        "query": "label_values(node_boot_time_seconds{job=\"node-exporter\"}, instance)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(kube_pod_info, namespace)",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "namespace",
+        "options": [],
+        "query": "label_values(kube_pod_info, namespace)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "IM K8s cluster portal",
+  "uid": "qNpDw4LZz",
+  "version": 40
+}

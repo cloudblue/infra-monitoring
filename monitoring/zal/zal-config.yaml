@@ -1,0 +1,12 @@
+- name: {{ .Values.cluster_name }}
+  hostGroups:
+    - prometheus_hosts
+  tag: prometheus
+  deploymentStatus: 0
+  itemDefaultApplication: prometheus
+  itemDefaultHistory: 5d
+  itemDefaultTrends: 5d
+  itemDefaultTrapperHosts: 0.0.0.0/0
+  triggerTags:
+    INFRA: ""
+  alertsDir: ./alerts

@@ -1,0 +1,131 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kube-prometheus-stack-im-rules
+  namespace: infra
+  labels:
+    app: kube-prometheus-stack
+    chart: kube-prometheus-stack-12.0.4
+    release: "prometheus-operator"
+    heritage: "Helm"
+spec:
+  groups:
+    - name: im-node.rules
+      rules:
+      - alert: NodeExporterDown
+        annotations:
+          description: Prometheus could not scrape a node-exporter for more than 10m,
+            or node-exporters have disappeared from discovery
+        expr: absent(up{job="node-exporter"} == 1)
+        for: 10m
+        labels:
+          severity: warning
+      - alert: NodeDiskAlmostFull
+        annotations:
+          description: Device {{$labels.device}} on node {{$labels.instance}} is 90% full.
+            (mounted at {{$labels.mountpoint}}).
+        expr: 100 - ( node_filesystem_avail_bytes / node_filesystem_size_bytes *100 )  >=
+          90
+        for: 10m
+        labels:
+          severity: critical
+      - alert: HostMemoryLow
+        annotations:
+          description: Host {{ $labels.instance }} has less than 10% free memory
+          summary: host has low free memory
+        expr: node_memory_MemAvailable_bytes{job="node-exporter"}/node_memory_MemTotal_bytes{job="node-exporter"}*100<10
+        for: 1m
+        labels:
+          severity: warning
+      - alert: EtcdSystemd1Active
+        annotations:
+          description: The etcd systemd service has not been active on {{ $labels.instance
+            }} for > 1m
+        expr: node_systemd_unit_state{job="node-exporter",name="etcd.service",state="active"}
+          == 0
+        for: 1m
+        labels:
+          severity: warning
+      - alert: KubeletSystemd5Active
+        annotations:
+          description: The kubelet systemd service has not been active on {{ $labels.instance
+            }} for > 5m
+        expr: node_systemd_unit_state{job="node-exporter",name="kubelet.service",state="active"}
+          == 0
+        for: 5m
+        labels:
+          severity: critical
+    - name: im-kubelet.rules
+      rules:
+      - alert: K8SNodeNotReady
+        annotations:
+          description: The Kubelet on {{ $labels.node }} has not checked in with the API,
+            or has set itself to NotReady, for more than 10 minutes
+          summary: Node status is NotReady
+        expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+        for: 10m
+        labels:
+          severity: warning
+      - alert: K8SManyNodesNotReady
+        annotations:
+          description: '{{ $value }}% of Kubernetes nodes are not ready'
+        expr: |-
+          count(kube_node_status_condition{condition="Ready",status="true"} == 0)
+          > 1 and (count(kube_node_status_condition{condition="Ready",status="true"} ==
+          0) / count(kube_node_status_condition{condition="Ready",status="true"})) > 0.2
+        for: 1m
+        labels:
+          severity: critical
+    - name: im-kube-state.rules
+      rules:
+      - alert: PodFrequentlyRestarting
+        annotations:
+          description: Pod {{$labels.namespaces}}/{{$labels.pod}} is was restarted {{$value}}
+            times within the last hour
+        expr: increase(kube_pod_container_status_restarts_total[1h]) > 5
+        for: 10m
+        labels:
+          severity: warning
+      - alert: ManyPodsError
+        annotations:
+          description: '{{ $value }} pods are in Error state'
+        expr: count(sum_over_time(kube_pod_container_status_terminated_reason{reason="Error"}[1h:10m])
+          > 0) > 5
+        for: 10m
+        labels:
+          severity: warning
+      - alert: ManyPodsPendingError
+        annotations:
+          description: '{{ $value }} pods are in Pending state for at least 10 minutes'
+        expr: sum(kube_pod_status_phase{job="kubernetes-service-endpoints", phase="Pending"}
+          > 0) > 3
+        for: 10m
+        labels:
+          severity: critical
+      - alert: PVCsStuckPending
+        annotations:
+          description: '{{ $value }} persistentvolumeclaims are in Pending state for at
+            least 10 minutes'
+        expr: sum(kube_persistentvolumeclaim_status_phase{job="kubernetes-service-endpoints",
+          phase="Pending"} > 0) > 0
+        for: 10m
+        labels:
+          severity: critical
+      - alert: NodeMemoryPressure
+        annotations:
+          description: Node {{$labels.namespaces}}/{{$labels.node}} is reporting it has
+            memory pressure
+        expr: kube_node_status_condition{condition="MemoryPressure",status="true"} ==
+          1
+        for: 5m
+        labels:
+          severity: critical
+      - alert: HostHighIOWait
+        expr: avg by (instance) (rate(node_cpu_seconds_total{job="node-exporter",mode="iowait"}[2m])) * 100 > 40
+        for: 2m
+        labels:
+          severity: warning
+          component: prometheus
+        annotations:
+          summary: "HostHighIOWait (instance {{ $labels.instance }})"
+          description: "Host has high IOWait (>40%) \n VALUE = {{ $value }}\n LABELS: {{ $labels }}"

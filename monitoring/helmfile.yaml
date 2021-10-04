@@ -1,0 +1,77 @@
+repositories:
+- name: "prometheus-community"
+  url: "https://prometheus-community.github.io/helm-charts"
+- name: "bitnami"
+  url: "https://charts.bitnami.com/bitnami"
+
+environments:
+  default:
+    values:
+      - {{ env "BASE_DIR" | default "/opt/helmfile-deploy" }}/infra.yaml
+      - {{ env "BASE_DIR" | default "/opt/helmfile-deploy" }}/generated-values.yaml
+      - {{ env "VALUES_FILE" | default "{}" }}
+
+helmDefaults:
+  verify: false
+  wait: false
+  timeout: 600
+
+releases:
+- name: "prometheus-operator"
+  namespace: "infra"
+  labels:
+    chart: "prometheus-operator"
+    component: "monitoring"
+  chart:  "prometheus-community/kube-prometheus-stack"
+  version: "12.12.0"
+  values:
+    - "node-exporter.yaml"
+#    - "prometheus-alerts.yaml.gotmpl"
+    - "prometheus-operator.yaml.gotmpl"
+
+{{ if .Values.monitoring.pcplogin.enabled }}
+- name: "blackbox-exporter"
+  namespace: "infra"
+  labels:
+    chart: "blackbox-exporter"
+    component: "monitoring"
+  chart:  "prometheus-community/prometheus-blackbox-exporter"
+  version: "4.10.1"
+  values:
+    - "blackbox-exporter.yaml.gotmpl"
+{{ end }}
+
+{{ if .Values.monitoring.prometheus_msteams_enabled }}
+- name: "prometheus-msteams"
+  namespace: "infra"
+  labels:
+    chart: "prometheus"
+    component: "monitoring"
+  chart: "prometheus-msteams"
+  version: "0.5.1"
+  values:
+    - "prometheus-msteams.yaml.gotmpl"
+{{ end }}
+
+{{ if .Values.monitoring.metrics_server_enabled }}
+- name: "metrics-server"
+  namespace: "infra"
+  labels:
+    chart: "metrics-server"
+    component: "monitoring"
+  chart:  "bitnami/metrics-server"
+  version: "5.10.0"
+  values:
+    - "metrics-server.yaml.gotmpl"
+{{ end }}
+{{ if .Values.monitoring.zal_enabled }}
+- name: "zal"
+  namespace: "infra"
+  labels:
+    chart: "zal"
+    component: "monitoring"
+  chart:  "zal"
+  version: "0.1.0"
+  values:
+    - "zal.yaml.gotmpl"
+{{ end }}

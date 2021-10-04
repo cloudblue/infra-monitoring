@@ -1,0 +1,46 @@
+prometheus-node-exporter:
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+  tolerations:
+    - effect: NoSchedule
+      operator: Exists
+  extraArgs:
+    # Note, these parameters look like they should be quoted or something
+    # however, this causes the regexes to not be properly parsed and will disregard these filters
+    - --collector.systemd.unit-blacklist=.*?\.(mount|device|target|scope|path|state|socket|timer|slice)
+    - --collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|fuse.lxcfs|mqueue|nsfs|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tmpfs|tracefs)$
+    - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/kubelet/pods)($|/)
+    - --collector.systemd
+    - --collector.diskstats.ignored-devices=^(ram|loop|fd|(h|v|xv)d[a-z]|nvme\\d+n\\d+p)\\d+$
+
+  extraHostPathMounts:
+    - name: system-dbus
+      mountPath: /var/run/dbus
+      hostPath: /var/run/dbus
+      readOnly: true
+    - name: system-systemd
+      mountPath: /run/systemd
+      hostPath: /run/systemd
+      readOnly: true
+    - name: boot
+      mountPath: /boot
+      hostPath: /boot
+      readOnly: true
+    - name: home
+      mountPath: /home
+      hostPath: /home
+      readOnly: true
+    - name: var
+      mountPath: /var
+      hostPath: /var
+      readOnly: true
+    - name: mntpv
+      mountPath: /mnt/pv
+      hostPath: /mnt/pv
+      readOnly: true
+    - name: varlibdocker
+      mountPath: /var/lib/docker
+      hostPath: /var/lib/docker
+      readOnly: true

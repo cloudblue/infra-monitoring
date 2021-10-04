@@ -1,0 +1,9 @@
+image:
+  registry: {{ .Values.docker_hub_mirror }}
+extraArgs:
+ kubelet-insecure-tls: true
+ kubelet-preferred-address-types: InternalIP
+apiService:
+  create: true
+rbac:
+  create: true

@@ -1,0 +1,12 @@
+replicaCount: 2
+revisionHistoryLimit: 1
+
+image:
+  registry: quay.io
+  name: devopyio/zabbix-alertmanager
+  tag: v1.2.0
+  pullPolicy: IfNotPresent
+
+cluster_name: changeme
+zabbix_server: zabbix-server
+zabbix_port: 10051

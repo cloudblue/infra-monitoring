@@ -1,0 +1,6 @@
+cluster_name: {{ .Values.monitoring.zal_cluster_name }}
+zabbix_server: {{ .Values.monitoring.zal_zabbix_server }}
+{{ if .Values.monitoring | getOrNil "zal_zabbix_port" }}
+zabbix_port: {{ .Values.monitoring.zal_zabbix_port }}
+{{ end }}
+

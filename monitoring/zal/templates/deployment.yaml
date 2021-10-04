@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: zal
+  name: zal
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      k8s-app: zal
+  template:
+    metadata:
+      labels:
+        name: zal
+        k8s-app: zal
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: k8s-app
+                  operator: In
+                  values:
+                  - zal
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - name: zal
+        image: quay.io/devopyio/zabbix-alertmanager:v1.2.0
+        args:
+        - send
+        - --log.level=info
+        - --zabbix-addr={{ .Values.zabbix_server }}:{{ .Values.zabbix_port }}
+        - --default-host={{ .Values.cluster_name }}
+        - --hosts-path=/etc/zal/sender-config.yml
+        ports:
+        - containerPort: 9095
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/zal
+      volumes:
+        - name: config-volume
+          configMap:
+            name: zal

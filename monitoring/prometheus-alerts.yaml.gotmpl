@@ -1,0 +1,147 @@
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by:
+      - alertname
+      group_interval: 5m
+      group_wait: 30s
+      receiver: null
+      repeat_interval: 12h
+{{ if or .Values.monitoring.prometheus_msteams_enabled .Values.monitoring.zal_enabled }}
+      routes:
+{{ if .Values.monitoring.prometheus_msteams_enabled }}
+      - match_re:
+          severity: critical|warning
+        receiver: prometheus-msteams
+        continue: true
+{{ end }}
+{{ if .Values.monitoring.zal_enabled }}
+      - match_re:
+          severity: critical|warning
+        receiver: zal
+        continue: true
+    receivers:
+{{   end }}
+{{ end }}
+{{ if .Values.monitoring.prometheus_msteams_enabled }}
+    - name: prometheus-msteams
+      webhook_configs:
+      - url: "http://prometheus-msteams:2000/alertmanager"
+        send_resolved: true
+{{ end }}
+{{ if .Values.monitoring.zal_enabled }}
+    - name: zal
+      webhook_configs:
+      - url: "http://zal:9095/alerts"
+        send_resolved: true
+{{ end }}
+    - name: "null"
+    inhibit_rules:
+      - target_match_re:
+          alertname: "KubePodNotReady|KubeContainerWaiting|PodFrequentlyRestarting|KubeDeploymentReplicasMismatch|KubeStatefulSetReplicasMismatch|KubeJobFailed|KubeJobCompletion|CmpapiOrdersAvailability|CmpapiProductsAvailability|CmpapiTokenAvailability|ErrorSending"
+          vital_namespace: ""
+      - target_match_re:
+          alertname: "CPUThrottlingHigh|ManyPodsPendingError|ManyPodsError"
+{{`
+additionalPrometheusRules:
+  - name: im-rules
+    groups:
+      - name: im-node.rules
+        rules:
+          - alert: NodeExporterDown
+            expr: absent(up{job="node-exporter"} == 1)
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              description: Prometheus could not scrape a node-exporter for more than 10m, or node-exporters have disappeared from discovery
+            # Catchall threshold for all Filesystems geting full. This will catch container filesystems
+          - alert: NodeDiskAlmostFull
+            expr: 100 - ( node_filesystem_avail_bytes / node_filesystem_size_bytes *100 )  >= 90
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              description: Device {{$labels.device}} on node {{$labels.instance}} is 90% full. (mounted at {{$labels.mountpoint}}).
+          - alert: HostMemoryLow
+            expr: node_memory_MemAvailable_bytes{job="node-exporter"}/node_memory_MemTotal_bytes{job="node-exporter"}*100<10
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              description: Host {{ $labels.instance }} has less than 10% free memory
+              summary: host has low free memory
+          - alert: EtcdSystemd1Active
+            expr: node_systemd_unit_state{job="node-exporter",name="etcd.service",state="active"} == 0
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              description: The etcd systemd service has not been active on {{ $labels.instance }} for > 1m
+          - alert: KubeletSystemd5Active
+            expr: node_systemd_unit_state{job="node-exporter",name="kubelet.service",state="active"} == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              description: The kubelet systemd service has not been active on {{ $labels.instance }} for > 5m
+      - name: im-kubelet.rules
+        rules:
+          - alert: K8SNodeNotReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              description: The Kubelet on {{ $labels.node }} has not checked in with the API, or has set itself to NotReady, for more than 10 minutes
+              summary: Node status is NotReady
+          - alert: K8SManyNodesNotReady
+            expr: |-
+              count(kube_node_status_condition{condition="Ready",status="true"} == 0)
+              > 1 and (count(kube_node_status_condition{condition="Ready",status="true"} ==
+              0) / count(kube_node_status_condition{condition="Ready",status="true"})) > 0.2
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              description: "{{ $value }}% of Kubernetes nodes are not ready"
+      - name: im-kube-state.rules
+        rules:
+          - alert: PodFrequentlyRestarting
+            expr: increase(kube_pod_container_status_restarts_total[1h]) > 5
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              description: Pod {{$labels.namespaces}}/{{$labels.pod}} is was restarted {{$value}} times within the last hour
+          - alert: ManyPodsError
+            annotations:
+              description: '{{ $value }} pods are in Error state'
+            expr: count(sum_over_time(kube_pod_container_status_terminated_reason{reason="Error"}[1h:10m]) > 0) > 5
+            for: 10m
+            labels:
+              severity: warning
+          - alert: ManyPodsPendingError
+            expr: sum(kube_pod_status_phase{job="kubernetes-service-endpoints", phase="Pending"} > 0) > 3
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              description: '{{ $value }} pods are in Pending state for at least 10 minutes'
+          - alert: PVCsStuckPending
+            expr: sum(kube_persistentvolumeclaim_status_phase{job="kubernetes-service-endpoints", phase="Pending"} > 0) > 0
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              description: '{{ $value }} persistentvolumeclaims are in Pending state for at least 10 minutes'
+          - alert: NodeMemoryPressure
+            expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              description: Node {{$labels.namespaces}}/{{$labels.node}} is reporting it has memory pressure
+`}}

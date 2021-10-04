@@ -1,0 +1,20 @@
+secretConfig: false
+config:
+  modules:
+    http_pcp_login:
+      prober: http
+      timeout: 10s
+      http:
+        method: POST
+        headers:
+          Content-Type: application/x-www-form-urlencoded
+        body: "event1234submit=doLogin&user={{ .Values.monitoring.pcplogin.user }}&password={{ .Values.monitoring.pcplogin.password }}"
+        fail_if_body_not_matches_regexp:
+        - '.*top\.location\.href=''[/a-zA-Z0-9]*/workspace.html.*'
+    http_ux1_login:
+      prober: http
+      timeout: 10s
+      http:
+        method: GET
+        fail_if_body_not_matches_regexp:
+        - '<div id="ccp-content"'
